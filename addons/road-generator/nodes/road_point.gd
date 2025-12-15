@@ -146,6 +146,19 @@ const SEG_DIST_MULT: float = 8.0 # How many road widths apart to add next RoadPo
 ## underside will not be generated at all.
 @export var underside_thickness: float = -1.0: set = _set_thickness
 
+# ------------------------------------------------------------------------------
+# Properties which assist with further decorating of roads, such as sidewalks
+# and railings
+@export_group("Checkpoint")
+# ------------------------------------------------------------------------------
+## Place objects or curbs along the edges of the road segments connected to this RoadPoint.
+## Do not use "RoadDecoration" directly, use derived types such as "Curb" or "InstanceAlongCurve".
+
+@export var checkpoint: RoadCheckpoint:
+	set(value):
+		checkpoint = value
+		_set_checkpoint()
+
 # -------------------------------------
 @export_group("Internal data")
 # -------------------------------------
@@ -420,6 +433,15 @@ func _set_thickness(value: float) -> void:
 	emit_transform()
 
 
+func _set_checkpoint():
+	if not is_instance_valid(checkpoint):
+		return
+	
+	if not checkpoint.is_connected("checkpoint_changed", _on_checkpoint_changed):
+		checkpoint.checkpoint_changed.connect(_on_checkpoint_changed)
+	
+	emit_transform()
+
 # ------------------------------------------------------------------------------
 #endregion
 #region Editor interactions
@@ -436,6 +458,9 @@ func _notification(what):
 		var low_poly = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and Engine.is_editor_hint()
 		emit_transform(low_poly)
 
+func _on_checkpoint_changed():
+	# triggered when checkpoint changes
+	emit_transform()
 
 func emit_transform(low_poly=false):
 	if _is_internal_updating:

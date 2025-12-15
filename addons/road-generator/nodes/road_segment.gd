@@ -723,6 +723,28 @@ func _rebuild():
 	else:
 		clear_lane_segments()
 
+	# setup checkpoints
+	for point in [start_point]:
+		if self.get_parent() == point:
+			if point.checkpoint:
+				var checkpoint: RoadCheckpoint = point.checkpoint
+
+				if not container.create_edge_curves:
+					push_warning("Checkpoint setup skipped as edge curves disabled: name: %s, number: %d" % [checkpoint.name, checkpoint.number])
+					continue
+				
+				# if not checkpoint:
+				# 	# this happens when decoration array element is empty
+				# 	# e.g. when user just clicked on "Add Element" in decorations
+				# 	continue
+				
+				# check if deco has setup function
+				# should be replaced when ported to Godot 4.5 with abstract classes
+				if not checkpoint.has_method("setup"):
+					push_error("Checkpoint missing setup function: %s" % checkpoint.name)
+					continue
+
+				checkpoint.setup(self)
 
 func _update_curve():
 	curve.clear_points()
